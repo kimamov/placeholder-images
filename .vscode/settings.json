@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "img",
+            "database": "imageservice",
+            "username": "root",
+            "password": "root"
+        }
+    ]
+}

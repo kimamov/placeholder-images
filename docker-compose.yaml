@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: mock_image_service
+      POSTGRES_DB: imageservice
     ports:
       - "5432:5432"
   pgadmin:

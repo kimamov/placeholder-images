@@ -1,9 +1,19 @@
+use actix_multipart::{
+    form::{
+        tempfile::{TempFile, TempFileConfig},
+        text::Text,
+        MultipartForm,
+    },
+    Multipart,
+};
 use actix_web::{
     get, post,
     web::{self, Data},
     App, HttpResponse, HttpServer, Responder,
 };
+use serde::Deserialize;
 use sqlx::{postgres::PgPool, Pool, Postgres};
+
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -29,6 +39,21 @@ async fn random_image(state: Data<AppState>) -> actix_web::Result<impl Responder
     Ok(HttpResponse::Ok().body("getting random image for you!!!"))
 }
 
+#[derive(Debug, MultipartForm)]
+struct ImageFormData {
+    #[multipart(rename = "file")]
+    name: Text<String>,
+    files: Vec<TempFile>,
+}
+
+#[post("/image")]
+async fn upload_image(
+    state: Data<AppState>,
+    MultipartForm(form): MultipartForm<ImageFormData>,
+) -> actix_web::Result<impl Responder> {
+    Ok(HttpResponse::Ok().body("uploading image for you!!!"))
+}
+
 #[derive(sqlx::FromRow, Debug)]
 struct Image {
     id: i32,
@@ -44,9 +69,9 @@ struct AppState {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let db = PgPool::connect("postgres://root:root@localhost:5432/postgres")
+    let db = PgPool::connect("postgres://root:root@localhost:5432/imageservice")
         .await
-        .unwrap();
+        .expect("Failed to connect to Postgres.");
 
     HttpServer::new(move || {
         App::new()
