@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_multipart::{
     form::{
         tempfile::{TempFile, TempFileConfig},
@@ -74,6 +75,8 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to connect to Postgres.");
 
     HttpServer::new(move || {
+        let cors = Cors::default().allow_any_origin();
+
         App::new()
             .app_data(db.clone())
             .service(hello)
