@@ -1,100 +1,18 @@
 use actix_cors::Cors;
-use actix_multipart::{
-    form::{
-        tempfile::{TempFile, TempFileConfig},
-        text::Text,
-        MultipartForm,
-    },
-    Multipart,
-};
 use actix_web::{
-    get,
     middleware::Logger,
-    post,
-    web::{self, Data},
-    App, HttpResponse, HttpServer, Responder,
+    web::{self},
+    App, HttpServer,
 };
 use env_logger::Env;
-use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgPool, Pool, Postgres};
+use sqlx::postgres::PgPool;
 
+mod types;
+mod app;
 mod models;
+mod handlers;
+mod routes;
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
-
-#[get("/image")]
-async fn random_image(state: Data<AppState>) -> actix_web::Result<impl Responder> {
-    let images = sqlx::query_as::<_, models::image::Image>("select * from images")
-        .fetch_one(&state.db)
-        .await
-        .unwrap();
-    println!("{:?}", images);
-
-    Ok(HttpResponse::Ok().body("getting random image for you!!!"))
-}
-
-#[derive(Debug, MultipartForm)]
-struct ImageFormData {
-    //#[multipart(rename = "file")]
-    title: Text<String>,
-    imagefile: TempFile,
-}
-
-#[post("/imagetest")]
-async fn upload_image_test(
-    MultipartForm(form): MultipartForm<ImageFormData>,
-) -> actix_web::Result<impl Responder> {
-    //println!("{:?}", form);
-    println!("image post received!");
-    Ok(HttpResponse::Ok().body("uploading image for you!!!"))
-}
-
-#[derive(Debug, MultipartForm)]
-struct TestFormData {
-    title: Text<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct TestFormResponse {
-    title: String,
-}
-
-#[post("/formtest")]
-async fn formtest(
-    MultipartForm(form): MultipartForm<TestFormData>,
-) -> actix_web::Result<impl Responder> {
-    println!("image post received!");
-    let res = TestFormResponse {
-        title: form.title.into_inner(),
-    };
-    Ok(HttpResponse::Ok().json(res))
-}
-
-#[post("/image")]
-async fn upload_image(
-    state: Data<AppState>,
-    MultipartForm(form): MultipartForm<ImageFormData>,
-) -> actix_web::Result<impl Responder> {
-    //println!("{:?}", form);
-    println!("image post received!");
-    Ok(HttpResponse::Ok().body("uploading image for you!!!"))
-}
-
-struct AppState {
-    db: Pool<Postgres>,
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -117,14 +35,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(cors)
             .wrap(Logger::default())
-            .app_data(web::Data::new(AppState { db: db.clone() }))
-            .service(hello)
-            .service(echo)
-            .service(random_image)
-            .route("/hey", web::get().to(manual_hello))
-            .service(upload_image)
-            .service(upload_image_test)
-            .service(formtest)
+            .app_data(web::Data::new(types::AppState { db: db.clone() }))
     })
     .bind(("127.0.0.1", port))?
     .run()
