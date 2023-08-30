@@ -18,6 +18,8 @@ use env_logger::Env;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPool, Pool, Postgres};
 
+mod models;
+
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -34,7 +36,7 @@ async fn manual_hello() -> impl Responder {
 
 #[get("/image")]
 async fn random_image(state: Data<AppState>) -> actix_web::Result<impl Responder> {
-    let images = sqlx::query_as::<_, Image>("select * from images")
+    let images = sqlx::query_as::<_, models::image::Image>("select * from images")
         .fetch_one(&state.db)
         .await
         .unwrap();
@@ -47,7 +49,7 @@ async fn random_image(state: Data<AppState>) -> actix_web::Result<impl Responder
 struct ImageFormData {
     //#[multipart(rename = "file")]
     title: Text<String>,
-    imagefiles: TempFile,
+    imagefile: TempFile,
 }
 
 #[post("/imagetest")]
@@ -83,20 +85,11 @@ async fn formtest(
 #[post("/image")]
 async fn upload_image(
     state: Data<AppState>,
-    //MultipartForm(form): MultipartForm<ImageFormData>,
+    MultipartForm(form): MultipartForm<ImageFormData>,
 ) -> actix_web::Result<impl Responder> {
     //println!("{:?}", form);
     println!("image post received!");
     Ok(HttpResponse::Ok().body("uploading image for you!!!"))
-}
-
-#[derive(sqlx::FromRow, Debug)]
-struct Image {
-    id: i32,
-    name: String,
-    url: String,
-    width: i32,
-    height: i32,
 }
 
 struct AppState {
@@ -124,7 +117,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(cors)
             .wrap(Logger::default())
-            .app_data(db.clone())
+            .app_data(web::Data::new(AppState { db: db.clone() }))
             .service(hello)
             .service(echo)
             .service(random_image)
