@@ -27,11 +27,11 @@ struct ImageFormData {
 
 #[get("/image")]
 pub async fn random_image(state: AppStateData) -> actix_web::Result<impl Responder> {
-    let images = sqlx::query_as::<_, image::Image>("select * from images")
+  /*   let images = sqlx::query_as::<_, image::Image>("select * from images")
         .fetch_one(&state.db)
         .await
-        .unwrap();
-    println!("{:?}", images);
+        .unwrap(); */
+    //println!("{:?}", images);
 
     Ok(HttpResponse::Ok().body("getting random image for you!!!"))
 }

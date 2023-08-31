@@ -36,6 +36,9 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(Logger::default())
             .app_data(web::Data::new(types::AppState { db: db.clone() }))
+            .configure(app::config::init)
+            .configure(routes::init)
+            
     })
     .bind(("127.0.0.1", port))?
     .run()

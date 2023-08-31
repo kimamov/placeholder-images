@@ -1,6 +1,4 @@
 use actix_web::web::ServiceConfig;
-use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgPool, Pool, Postgres};
 
 
 use crate::handlers;
