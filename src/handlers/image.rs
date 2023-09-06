@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 
 use actix_web::{get, post, web, HttpResponse, Responder};
@@ -7,7 +9,7 @@ use crate::models::image;
 use crate::types::AppStateData;
 
 #[derive(Debug, MultipartForm)]
-struct ImageFormData {
+pub struct ImageFormData {
     //#[multipart(rename = "file")]
     pub title: Text<String>,
     pub imagefile: TempFile,
@@ -15,13 +17,7 @@ struct ImageFormData {
 
 #[get("/image")]
 pub async fn random_image(state: AppStateData) -> actix_web::Result<impl Responder> {
-    /* let images = sqlx::query_as::<_, image::Image>("select * from image;")
-       .fetch_all(&state.db)
-       .await
-       .unwrap();
-    */
-
-    let images = sqlx::query_as!(image::Image, "select * from image;")
+    let images = sqlx::query_as::<_, image::Image>("select * from image;")
         .fetch_all(&state.db)
         .await
         .unwrap();
@@ -45,18 +41,21 @@ pub async fn upload_image(
     println!("image post received!");
 
     let image = sqlx::query!(
-        r#"INSERT INTO image ("name", "url", "width", "height") VALUES ( ?, ?, ?, ? )"#,
-        "form.title",
-        "https://www.google.com",
-        100,
-        100,
+        "INSERT INTO image (name, url, width, height) VALUES ($1, $2, $3, $4) RETURNING name, id",
+        form.title.into_inner(),
+        "https://picsum.photos/200/300",
+        200,
+        300,
     )
     .fetch_one(&state.db)
     .await
     .unwrap();
 
     let res = Res {
-        message: "uploading image for you!!!".to_string(),
+        message: format!(
+            "create image with the id: {} and the name {} for you :)",
+            image.id, image.name
+        ),
     };
 
     Ok(HttpResponse::Ok().json(res))
