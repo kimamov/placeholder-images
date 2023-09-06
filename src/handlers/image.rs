@@ -1,6 +1,7 @@
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 
 use actix_web::{get, post, web, HttpResponse, Responder};
+use serde::{Deserialize, Serialize};
 
 use crate::models::image;
 use crate::types::AppStateData;
@@ -14,7 +15,13 @@ struct ImageFormData {
 
 #[get("/image")]
 pub async fn random_image(state: AppStateData) -> actix_web::Result<impl Responder> {
-    let images = sqlx::query_as::<_, image::Image>("select * from image;")
+    /* let images = sqlx::query_as::<_, image::Image>("select * from image;")
+       .fetch_all(&state.db)
+       .await
+       .unwrap();
+    */
+
+    let images = sqlx::query_as!(image::Image, "select * from image;")
         .fetch_all(&state.db)
         .await
         .unwrap();
@@ -24,6 +31,11 @@ pub async fn random_image(state: AppStateData) -> actix_web::Result<impl Respond
     Ok(HttpResponse::Ok().json(images))
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct Res {
+    message: String,
+}
+
 #[post("/image")]
 pub async fn upload_image(
     state: AppStateData,
@@ -31,5 +43,21 @@ pub async fn upload_image(
 ) -> actix_web::Result<impl Responder> {
     //println!("{:?}", form);
     println!("image post received!");
-    Ok(HttpResponse::Ok().body("uploading image for you!!!"))
+
+    let image = sqlx::query!(
+        r#"INSERT INTO image ("name", "url", "width", "height") VALUES ( ?, ?, ?, ? )"#,
+        "form.title",
+        "https://www.google.com",
+        100,
+        100,
+    )
+    .fetch_one(&state.db)
+    .await
+    .unwrap();
+
+    let res = Res {
+        message: "uploading image for you!!!".to_string(),
+    };
+
+    Ok(HttpResponse::Ok().json(res))
 }

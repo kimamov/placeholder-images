@@ -1,1 +1,1 @@
-INSERT INTO images ( name, url, width, height ) VALUES ('Image 1', 'https://picsum.photos/200/300', 200, 300);
+INSERT INTO image ( name, url, width, height ) VALUES ('Image 1', 'https://picsum.photos/200/300', 200, 300);
