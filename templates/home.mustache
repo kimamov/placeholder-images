@@ -1,0 +1,16 @@
+{{< partials/layout.mustache}} 
+{{$body}}
+ <main>
+    <div class="container mx-auto">
+        <h1>{{title}}</h1>
+        <h2>test</h2>
+        <h2>welcome to my image service 2222</h2>
+        <section class="grid sm:grid-cols-2 md:grid-cols-4 gap-2">
+            {{#posts}} {{>partials/postItem.mustache}} {{/posts}}{{^posts}}<p>No posts yet :(</p>{{/posts}}
+        </section>
+    </div>
+    <footer>end of content 2</footer>
+    </main>
+    {{/body}}
+
+{{/ partials/layout.mustache}}
