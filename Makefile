@@ -8,4 +8,4 @@ db:
 
 
 run_dev:
-	cargo watch -x run -w 'src'
+	cargo watch -x run

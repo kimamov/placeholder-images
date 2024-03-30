@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+<main>
+    <div class="container mx-auto">
+        <h2>test</h2>
+        <h2>welcome to my image service 2222</h2>
+        <section class="post my-4">
+            <h1>{{post.id}}</h1>
+            <h2>{{post.name}}</h2>
+            <img class="w-full" src="{{post.url}}" alt="">
+        </section>
+    </div>
+    <footer>end of content 2</footer>
+</main>
+
+{% endblock %}

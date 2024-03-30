@@ -1,27 +1,23 @@
-use actix_web::{http::header::ContentType, route, HttpResponse, Responder};
-use ramhorns::{Content, Ramhorns, Template};
+use actix_web::{
+    http::{header::ContentType, Error},
+    route, web, HttpResponse, Responder, ResponseError,
+};
+use askama_actix::Template;
 
 use crate::{
     models::image::{self, Image},
     types::AppStateData,
 };
 
-#[derive(Content)]
+#[derive(Template)] // this will generate the code...
+#[template(path = "home.html")] // using the template in this path, relative
 struct Home {
     posts: Vec<Image>,
     title: String,
 }
 
-#[derive(Content)]
-struct Page<T> {
-    body: T,
-}
-
 #[route("/", method = "GET", method = "HEAD")]
 pub async fn index(state: AppStateData) -> actix_web::Result<impl Responder> {
-    let mut tpls: Ramhorns = Ramhorns::lazy("templates").unwrap();
-    let tpl = tpls.from_file("home.mustache").unwrap();
-
     let images = sqlx::query_as::<_, image::Image>("select * from image;")
         .fetch_all(&state.db)
         .await
@@ -29,19 +25,46 @@ pub async fn index(state: AppStateData) -> actix_web::Result<impl Responder> {
 
     println!("{:?}", images);
 
-    // let rendered_page = tpl.render(&Page {
-    //     body: Home {
-    //         title: "Feed".to_string(),
-    //         posts: images,
-    //     },
-    // });
-
-    let rendered = tpl.render(&Home {
-        title: "Test passed".to_string(),
+    let template = Home {
+        title: "home".to_string(),
         posts: images,
-    });
+    };
 
-    Ok(HttpResponse::Ok()
-        .content_type(ContentType::html())
-        .body(rendered))
+    match template.render() {
+        Ok(template_string) => Ok(HttpResponse::Ok()
+            .content_type(ContentType::html())
+            .body(template_string)),
+        Err(_) => Ok(HttpResponse::InternalServerError()
+            .reason("failed to render template to string")
+            .finish()),
+    }
+}
+
+#[derive(Template)]
+#[template(path = "detail.html")]
+struct DetailTemplate {
+    pub post: Image,
+}
+
+#[route("/{id}", method = "GET", method = "HEAD")]
+pub async fn post_detail(
+    state: AppStateData,
+    id: web::Path<i32>,
+) -> actix_web::Result<impl Responder> {
+    let image = sqlx::query_as::<_, image::Image>("SELECT * FROM image WHERE id = $1")
+        .bind(id.clone())
+        .fetch_one(&state.db)
+        .await;
+
+    match image {
+        Ok(image_data) => {
+            let template = DetailTemplate { post: image_data };
+
+            match template.render() {
+                Ok(template_string) => Ok(HttpResponse::Ok().body(template_string)),
+                Err(_) => Ok(HttpResponse::InternalServerError().finish()),
+            }
+        }
+        Err(e) => Ok(HttpResponse::NotFound().body(e.to_string())),
+    }
 }
