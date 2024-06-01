@@ -1,4 +1,5 @@
 use actix_cors::Cors;
+use actix_files as fs;
 use actix_web::{
     middleware::Logger,
     web::{self},
@@ -7,12 +8,12 @@ use actix_web::{
 use env_logger::Env;
 use sqlx::postgres::PgPool;
 
-mod types;
 mod app;
-mod models;
 mod handlers;
+mod models;
 mod routes;
-
+mod services;
+mod types;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -33,12 +34,12 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::default().allow_any_origin();
 
         App::new()
+            .service(fs::Files::new("/static", "static/").show_files_listing())
             .wrap(cors)
             .wrap(Logger::default())
             .app_data(web::Data::new(types::AppState { db: db.clone() }))
             .configure(app::config::init)
             .configure(routes::init)
-            
     })
     .bind(("127.0.0.1", port))?
     .run()

@@ -6,13 +6,13 @@
     <div class="container mx-auto">
         <h2>test</h2>
         <h2>welcome to my image service 2222</h2>
-        <section class="post my-4">
-            <h1>{{post.id}}</h1>
-            <h2>{{post.name}}</h2>
-            <img class="w-full" src="{{post.url}}" alt="">
-        </section>
+        <figure class="my-4 post-detail">
+            <h2>{{post.id}}</h2>
+            <figcaption>{{post.name}}</figcaption>
+            <img class="w-full" style="view-transition-name: post-{{post.id}}" view-transition-name="post-{{post.id}}"
+                src="{{post.url}}" alt="">
+        </figure>
     </div>
-    <footer>end of content 2</footer>
 </main>
 
 {% endblock %}

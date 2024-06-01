@@ -1,7 +1,8 @@
-<a href="/{{post.id}}" class="border-black border-2 rounded-md overflow-clip">
+<a href="/{{post.id}}" class="border-black border-2 rounded-md overflow-clip placeholder-stone-600 post">
     <h2>{{post.name}}</h2>
     <p>{{post.id}}</p>
-    <img class="w-full h-auto" src="{{post.url}}" alt="alt image stuff">
+    <img class="w-full h-auto" style="view-transition-name: post-{{post.id}}" view-transition-name="post-{{post.id}}"
+        src="{{post.url}}" alt="alt image stuff">
     <p>{{post.url}}</p>
     <p>{{post.width}} x {{post.height}}</p>
 </a>

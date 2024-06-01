@@ -17,3 +17,6 @@ sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres" ] }
 ramhorns = "1.0.0"
 askama_actix = "0.14.0"
 askama = { version = "0.12.1", features = ["with-actix-web"] }
+actix-files = "0.6.5"
+fast_image_resize = { version = "4.0.0", features = ["image"] }
+image = "0.25.1"

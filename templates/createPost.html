@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+<main>
+    <div class="container mx-auto">
+        <h2>create post</h2>
+        <form hx-encoding='multipart/form-data' hx-post='/post' hx-swap="afterend" hx-reset-on-success
+            _='on htmx:xhr:progress(loaded, total) set #progress.value to (loaded/total)*100'>
+            <input class="outline-2 outline-black outline block" type="text" placeholder="title" name="title">
+            <input class="outline-2 outline-black outline mt-2 block" type="file" placeholder="file" name="file" id="">
+            <button class="bg-purple-600 mt-2 inline-block py-1 px-2">
+                submit
+            </button>
+
+            <progress id='progress' value='0' max='100'></progress>
+
+
+        </form>
+        <div id="form-response">fake response</div>
+
+    </div>
+
+</main>
+
+{% endblock %}

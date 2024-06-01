@@ -68,3 +68,20 @@ pub async fn post_detail(
         Err(e) => Ok(HttpResponse::NotFound().body(e.to_string())),
     }
 }
+
+#[derive(Template)]
+#[template(path = "createPost.html")]
+struct CreatePostTemplate {
+    pub title: String,
+}
+
+#[route("/create", method = "GET", method = "HEAD")]
+pub async fn post_create() -> actix_web::Result<impl Responder> {
+    let template = CreatePostTemplate {
+        title: "test".to_string(),
+    };
+    match template.render() {
+        Ok(template_string) => Ok(HttpResponse::Ok().body(template_string)),
+        Err(_) => Ok(HttpResponse::InternalServerError().finish()),
+    }
+}
