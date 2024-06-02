@@ -1,13 +1,12 @@
-use std::fmt::{format, Debug};
+use std::fmt::Debug;
 use std::path::PathBuf;
 
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 
-use actix_web::{get, post, web, HttpResponse, Responder};
-use askama::Html;
+use actix_web::{get, post, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
-use crate::models::image::{self, Image};
+use crate::models::image::{self};
 use crate::services::image::create_thumbnail;
 use crate::types::AppStateData;
 
@@ -65,17 +64,17 @@ pub async fn upload_image(
     println!("{}", file_path.display());
 
     match form.file.file.persist(&file_path) {
-        Ok(_) => {
-            match create_thumbnail(file_path.as_os_str().to_str().unwrap()){
-                Ok(_)=>{
-      match sqlx::query!(
-        "INSERT INTO image (name, url, width, height, thumbnail) VALUES ($1, $2, $3, $4, $5) RETURNING name, id, url, thumbnail",
-        form.title.into_inner(),
-        format!("/static/{}",file_name),
-        200,
-        300,
-        format!("/static/{}_thumbnail", file_name)
-    )
+        Ok(_) => match create_thumbnail(file_path.as_os_str().to_str().unwrap()) {
+            Ok(path) => {
+                println!("create thumbnail at path {}", path);
+                match sqlx::query!(
+                                    "INSERT INTO image (name, url, width, height, thumbnail) VALUES ($1, $2, $3, $4, $5) RETURNING name, id, url, thumbnail",
+                                    form.title.into_inner(),
+                                    format!("/static/{}",file_name),
+                                    200,
+                                    300,
+                                    format!("/static/{}_thumbnail", file_name)
+                                )
                 .fetch_one(&state.db)
                 .await
                 {
@@ -92,14 +91,12 @@ pub async fn upload_image(
                         HttpResponse::InternalServerError().body("db error")
                     }
                 }
-
-            },
-                Err(e)=>{
-                    println!("{}",e);
-                    HttpResponse::InternalServerError().body("failed to create thumbnail")
-                }
             }
+            Err(e) => {
+                println!("{}", e);
+                HttpResponse::InternalServerError().body("failed to create thumbnail")
             }
+        },
         Err(e) => {
             println!("{}", e);
             HttpResponse::InternalServerError().body("file error")

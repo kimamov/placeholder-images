@@ -1,7 +1,4 @@
-use actix_web::{
-    http::{header::ContentType, Error},
-    route, web, HttpResponse, Responder, ResponseError,
-};
+use actix_web::{http::header::ContentType, route, web, HttpResponse, Responder};
 use askama_actix::Template;
 
 use crate::{
