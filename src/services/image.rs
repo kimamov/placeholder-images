@@ -1,13 +1,15 @@
 use std::io::BufWriter;
 
 use image::codecs::jpeg::JpegEncoder;
+use image::flat::Error;
 use image::io::Reader as ImageReader;
 use image::{save_buffer, ExtendedColorType, ImageEncoder, ImageError};
 
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
+use uuid::Uuid;
 
-pub fn create_thumbnail(original_image_path: &str) -> Result<String, ImageError> {
+pub fn create_thumbnail_fast(original_image_path: &str) -> Result<String, ImageError> {
     // Read source image from file
     let src_image = ImageReader::open(original_image_path)
         .expect("failed to read buffer")
@@ -56,5 +58,22 @@ pub fn create_thumbnail(original_image_path: &str) -> Result<String, ImageError>
             println!("save buffer error: {}", e);
             Err(e)
         }
+    }
+}
+
+pub fn create_thumbnail(original_image_path: &str) -> Result<String, ImageError> {
+    // Read source image from file
+    let thumbnail = ImageReader::open(original_image_path)?
+        .decode()?
+        .thumbnail(320, 180);
+
+    let id = Uuid::new_v4();
+
+    let output_path = format!("static/thumbnail_{}.jpg", id);
+    println!("REACHED SAVE!!!");
+
+    match thumbnail.save(&output_path) {
+        Ok(_) => Ok(output_path),
+        Err(e) => Err(e),
     }
 }
