@@ -1,13 +1,15 @@
 use std::io::BufWriter;
 
-use image::codecs::png::PngEncoder;
+use image::codecs::jpeg::JpegEncoder;
 use image::io::Reader as ImageReader;
-use image::{DynamicImage, ExtendedColorType, GenericImageView, ImageEncoder};
+use image::{
+    save_buffer, DynamicImage, ExtendedColorType, GenericImageView, ImageEncoder, ImageError,
+};
 
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, PixelType, Resizer};
 
-pub fn create_thumbnail(original_image_path: &str) {
+pub fn create_thumbnail(original_image_path: &str) -> Result<String, ImageError> {
     // Read source image from file
     let src_image: DynamicImage = ImageReader::open(original_image_path)
         .unwrap()
@@ -24,9 +26,9 @@ pub fn create_thumbnail(original_image_path: &str) {
     let mut resizer = Resizer::new();
     resizer.resize(&src_image, &mut dst_image, None).unwrap();
 
-    // Write destination image as PNG-file
+    // Write destination image as JPEG-file
     let mut result_buf = BufWriter::new(Vec::new());
-    PngEncoder::new(&mut result_buf)
+    JpegEncoder::new(&mut result_buf)
         .write_image(
             dst_image.buffer(),
             dst_width,
@@ -34,4 +36,16 @@ pub fn create_thumbnail(original_image_path: &str) {
             ExtendedColorType::Rgba8,
         )
         .unwrap();
+
+    let output_path = format!("{}_thumbnail", original_image_path);
+    match save_buffer(
+        &output_path,
+        result_buf.buffer(),
+        dst_width,
+        dst_height,
+        ExtendedColorType::Rgba8,
+    ) {
+        Ok(_) => Ok(output_path),
+        Err(e) => Err(e),
+    }
 }

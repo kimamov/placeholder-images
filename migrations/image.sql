@@ -5,4 +5,5 @@ CREATE TABLE IF NOT EXISTS image (
     source TEXT,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL
+    thumbnail TEXT NOT NULL
 );
