@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 
-use actix_web::{get, post, HttpResponse, Responder};
+use actix_web::{get, post, route, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
 use crate::models::image::{self};
@@ -17,24 +17,24 @@ pub struct ImageFormData {
     pub file: TempFile,
 }
 
-#[get("/image")]
-pub async fn random_image(state: AppStateData) -> actix_web::Result<impl Responder> {
-    let images = sqlx::query_as::<_, image::Image>("select * from image;")
-        .fetch_all(&state.db)
-        .await
-        .unwrap();
+// #[get("/image")]
+// pub async fn random_image(state: AppStateData) -> actix_web::Result<impl Responder> {
+//     let images = sqlx::query_as::<_, image::Image>("select * from image;")
+//         .fetch_all(&state.db)
+//         .await
+//         .unwrap();
 
-    println!("{:?}", images);
+//     println!("{:?}", images);
 
-    Ok(HttpResponse::Ok().json(images))
-}
+//     Ok(HttpResponse::Ok().json(images))
+// }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Res {
     message: String,
 }
 
-#[post("/post")]
+#[route("/image", method = "POST")]
 pub async fn upload_image(
     state: AppStateData,
     MultipartForm(form): MultipartForm<ImageFormData>,
@@ -42,6 +42,8 @@ pub async fn upload_image(
     //println!("{:?}", form);
     println!("image post received!");
     const MAX_FILE_SIZE: usize = 1024 * 1024 * 10;
+
+    // return HttpResponse::Ok().body(format!("test post"));
 
     match form.file.size {
         0 => return HttpResponse::BadRequest().finish(),
@@ -63,11 +65,14 @@ pub async fn upload_image(
 
     println!("{}", file_path.display());
 
+    // HttpResponse::Ok().body(format!("reached"))
+
     match form.file.file.persist(&file_path) {
-        Ok(_) => match create_thumbnail(file_path.as_os_str().to_str().unwrap()) {
-            Ok(path) => {
-                println!("create thumbnail at path {}", path);
-                match sqlx::query!(
+        Ok(_) => match file_path.as_os_str().to_str() {
+            Some(fp) => match create_thumbnail(fp) {
+                Ok(path) => {
+                    println!("create thumbnail at path {}", path);
+                    match sqlx::query!(
                                     "INSERT INTO image (name, url, width, height, thumbnail) VALUES ($1, $2, $3, $4, $5) RETURNING name, id, url, thumbnail",
                                     form.title.into_inner(),
                                     format!("/static/{}",file_name),
@@ -91,12 +96,18 @@ pub async fn upload_image(
                         HttpResponse::InternalServerError().body("db error")
                     }
                 }
-            }
-            Err(e) => {
-                println!("{}", e);
-                HttpResponse::InternalServerError().body("failed to create thumbnail")
+                }
+                Err(e) => {
+                    println!("{}", e);
+                    HttpResponse::InternalServerError().body("failed to create thumbnail")
+                }
+            },
+            None => {
+                println!("could not create filepath");
+                HttpResponse::InternalServerError().body("failed to create file path")
             }
         },
+
         Err(e) => {
             println!("{}", e);
             HttpResponse::InternalServerError().body("file error")

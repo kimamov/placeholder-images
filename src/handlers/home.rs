@@ -37,6 +37,30 @@ pub async fn index(state: AppStateData) -> actix_web::Result<impl Responder> {
     }
 }
 
+// #[route("/", method = "GET", method = "HEAD")]
+// pub async fn index(state: AppStateData) -> actix_web::Result<impl Responder> {
+//     let images = sqlx::query_as::<_, image::Image>("select * from image;")
+//         .fetch_all(&state.db)
+//         .await
+//         .unwrap();
+
+//     println!("{:?}", images);
+
+//     let template = Home {
+//         title: "home".to_string(),
+//         posts: images,
+//     };
+
+//     match template.render() {
+//         Ok(template_string) => Ok(HttpResponse::Ok()
+//             .content_type(ContentType::html())
+//             .body(template_string)),
+//         Err(_) => Ok(HttpResponse::InternalServerError()
+//             .reason("failed to render template to string")
+//             .finish()),
+//     }
+// }
+
 #[derive(Template)]
 #[template(path = "detail.html")]
 struct DetailTemplate {
